@@ -5,7 +5,9 @@ import tables, h5py
 import pickle, time
 import logging
 import os,binascii, datetime
-from tensorflow.examples.tutorials.mnist import input_data
+from sklearn.metrics.pairwise import pairwise_distances
+
+# from tensorflow.examples.tutorials.mnist import input_data
 logging.basicConfig(level=logging.DEBUG,format='(%(threadName)-10s) %(message)s',)
 
 GeneBCMatrix = collections.namedtuple('GeneBCMatrix', ['gene_ids', 'gene_names', 'barcodes', 'matrix'])
@@ -58,3 +60,20 @@ def normalise(mat):
     normaliser = sp_sparse.csc_matrix((norms.reshape(n,),(np.arange(n),np.arange(n))), shape=(n,n))
     return sp_sparse.csc_matrix.dot(mat,normaliser).transpose()
 
+"""
+l2 distance
+"""
+def l2_dist(X1,X2):
+    return pairwise_distances(X1, X2, metric='l2', n_jobs=1)
+
+"""
+l1 distance
+"""
+def l1_dist(X1,X2):
+    return pairwise_distances(X1, X2, metric='l1', n_jobs=1)
+
+"""
+Cosine distance
+"""
+def cosine_dist(X1, X2):
+    return pairwise_distances(X1, X2, metric='cosine', n_jobs=1)

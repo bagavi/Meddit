@@ -1,6 +1,5 @@
 import collections
 import matplotlib, datetime
-from sklearn.metrics.pairwise import pairwise_distances
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -15,28 +14,10 @@ import os,binascii, datetime
 import multiprocessing as mp
 import itertools
 from sys import getsizeof
-import logging, data_loader
+import logging, data_loader, helper
 import sys
 logging.basicConfig(level=logging.DEBUG,format='(%(threadName)-10s) %(message)s',)
 
-
-"""
-l2 distance
-"""
-def l2_dist(X1,X2):
-    return pairwise_distances(X1, X2, metric='l2', n_jobs=1)
-
-"""
-l1 distance
-"""
-def l1_dist(X1,X2):
-    return pairwise_distances(X1, X2, metric='l1', n_jobs=1)
-
-"""
-Cosine distance
-"""
-def cosine_dist(X1, X2):
-    return pairwise_distances(X1, X2, metric='cosine', n_jobs=1)
 
 """
     Performs the initialization step.
@@ -65,12 +46,12 @@ def UCB(arg_tuple):
     sigma       = arg_tuple[4]
     verbose     = arg_tuple[5]
     
-    np.random.seed(exp_index) #Random seed for repeatability
+    np.random.seed(exp_index) #Random seed for reproducibility
     print "loading dataset",
     # Variable initialization
     data      = data_loader()
     n         = data.shape[0]
-    Delta     = 1.0/(n) #Accuracy parameter. Increase this if you want to increase the speed
+    Delta     = 1.0/n #Accuracy parameter. Increase this if you want to increase the speed
     num_arms  = 32 #Number of arms to be pulled in every round parallelly
     step_size = 32 #Number of distance evaluation to be performed on every arm
     lcb       = np.zeros(n, dtype='float')       #At any point, stores the mu - lower_confidence_interval
@@ -84,6 +65,12 @@ def UCB(arg_tuple):
     # Bookkeeping variables
     start_time = time.time()
     summary    = np.zeros(n*10)
+
+    if exp_index==0:
+        print "Calculating full summary for exp 0"
+        full_summary = []
+        left_over_array = [] 
+        
     old_tmean  = 0
     """
         Chooses the "num_arms" arms with lowest lcb and removes the ones which have been pulled n times.
@@ -138,7 +125,14 @@ def UCB(arg_tuple):
     print "running experiment ", exp_index, "with sigma", sigma
     #Step 2: Iterate
     for ind in range(n*10):
-
+        
+        #Storing the whole experiment for the first experiment
+        if exp_index==0:
+            order = estimate.argsort()
+            full_summary += [ [order, estimate, lcb, ucb, T] ]
+            left_over_array += [np.where(lcb < np.min(ucb))]
+        
+        
         #Choose the arms
         arms_to_pull = choose_arm()
         
@@ -154,14 +148,20 @@ def UCB(arg_tuple):
         #Stats
         summary[ind] = estimate.argmin()
         if T.mean() > old_tmean:
-            old_tmean = T.mean() + 20
+            old_tmean = T.mean() + 10
             thrown_away = (100.0*np.where(lcb > np.min(ucb))[0].shape[0])/n
             if verbose:
-                logging.info(str(exp_index)+" Thrown away "+" "+str(thrown_away)+" "+str(T.mean()) ) 
-
-#     filename = '../experiments/'+dataset_name+'/meddit/'+str(exp_index)+'.pkl'
-#     with open(filename,'wb') as f:
-#         pickle.dump([summary, T.mean()] ,f)
+                logging.info(str(exp_index)+" Thrown away "+" "+str(thrown_away)+" "+str(T.mean())+" "+str(T.std()) ) 
+                
+    if exp_index==0:
+        print "Saving full summary for exp 0"
+        filename = '../experiments/figure_data/'+dataset_name+'_sample.pkl'
+        with open(filename,'wb') as f:
+            pickle.dump([full_summary, left_over_array, T] ,f)
+            
+    filename = '../experiments/'+dataset_name+'/meddit/'+str(exp_index)+'.pkl'
+    with open(filename,'wb') as f:
+        pickle.dump([summary, T.mean()] ,f)
 
 
 ap = argparse.ArgumentParser(description="Reproduce the experiments in the manuscript")
@@ -179,26 +179,25 @@ verbose    = args.verbose
 
 if dataset   == 'rnaseq20k':
     data_loader = data_loader.load_rnaseq20k
-    dist_func   = l1_dist
+    dist_func   = helper.l1_dist
     sigma       = 0.25
 elif dataset == 'rnaseq100k':
     data_loader = data_loader.load_rnaseq100k
-    dist_func   = l1_dist
+    dist_func   = helper.l1_dist
     sigma       = 0.25
 elif dataset == 'netflix20k':
     data_loader = data_loader.load_netflix20k
-    dist_func   = cosine_dist
-    sigma       = 0.1
+    dist_func   = helper.cosine_dist
+    sigma       = 0.2
 elif dataset == 'netflix100k':
     data_loader = data_loader.load_netflix100k
-    dist_func   = cosine_dist
-    sigma       = 0.1
+    dist_func   = helper.cosine_dist
+    sigma       = 0.2
 elif dataset == 'mnist':
     data_loader = data_loader.load_mnist
-    dist_func   = l2_dist
+    dist_func   = helper.l2_dist
                    
 print "Running", num_trials, "experiments on ", num_jobs, "parallel jobs", "on dataset", dataset
 arg_tuple =  itertools.product(range(num_trials), [data_loader], [dataset], [dist_func], [sigma], [verbose] )
-
 pool      = mp.Pool(processes=num_jobs)
 pool.map(UCB, arg_tuple)
