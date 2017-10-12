@@ -13,7 +13,6 @@ import imp
 import os,binascii, datetime
 import multiprocessing as mp
 import itertools
-from sys import getsizeof
 import logging, data_loader, helper
 import sys
 logging.basicConfig(level=logging.DEBUG,format='(%(threadName)-10s) %(message)s',)
@@ -38,7 +37,7 @@ def initialise(data, init_size, dist_func):
     dist_func   : Function to evaluate the distances
     
 """
-def UCB(arg_tuple):
+def Meddit(arg_tuple):
     exp_index   = arg_tuple[0]
     data_loader = arg_tuple[1]
     dataset_name= arg_tuple[2]
@@ -200,4 +199,4 @@ elif dataset == 'mnist':
 print "Running", num_trials, "experiments on ", num_jobs, "parallel jobs", "on dataset", dataset
 arg_tuple =  itertools.product(range(num_trials), [data_loader], [dataset], [dist_func], [sigma], [verbose] )
 pool      = mp.Pool(processes=num_jobs)
-pool.map(UCB, arg_tuple)
+pool.map(Meddit, arg_tuple)
