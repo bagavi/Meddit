@@ -1,0 +1,43 @@
+data/
+	netflix/
+		all_combined_data.h5 - Netflix prize dataset
+	rnaseq/
+		1M_neurons_neuron20k.h5 - 20k dataset (10x genomics)
+		cluster1                - 100k dataset (10x genomics)
+		20k_2000_distances.npy  - True distance for 2000 points in 20k dataset
+		1000k_2000_distances.npy- True distance for 2000 points in 100k dataset
+
+experiments/
+	netflix100k/
+		meddit/
+			XXX.pkl - 1000 experiments run using Med-dit
+		rand/
+			YYY.pkl - 1000 experiments run using RAND
+	netflix20k/
+		meddit/
+			XXX.pkl - 1000 experiments run using Med-dit
+		rand/
+			YYY.pkl - 1000 experiments run using RAND
+	rnaseq100k/
+		meddit/
+			XXX.pkl - 1000 experiments run using Med-dit
+		rand/
+			YYY.pkl - 1000 experiments run using RAND
+	rnaseq20k/
+		meddit/
+			XXX.pkl - 1000 experiments run using Med-dit
+		rand/
+			YYY.pkl - 1000 experiments run using RAND
+figure/
+	RNASeq100k Figures.ipynb  - Figures in the paper for rnaseq100k
+	RNASeq20k Figures.ipynb   - Figures in the paper for rnaseq20k
+	Netflix100k figures.ipynb - Figures in the paper for netflix100k
+	Netflix20k figures.ipynb  - Figures in the paper for netflix20k
+
+scripts/
+	algorithm.py    - Meddit algorithm function
+	data_loader.py  - Downloads data and has loader function
+	helper.py       - Helper functions.
+        sample_distances.py - provides sample distances for generatig distributoin figures
+
+
