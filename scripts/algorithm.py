@@ -131,8 +131,9 @@ def Meddit(arg_tuple):
             #Collecting final stats
             summary[summary_ind] = estimate.argmin()
             summary_ind += 1
-            full_summary += [ [estimate] ]
-            left_over_array += [np.where(lcb < np.min(ucb))]
+            if exp_index==0:
+                full_summary += [ [estimate] ]
+                left_over_array += [np.where(lcb < np.min(ucb))]
             logging.info("Done. Best arm = "+str(np.argmin(lcb)))
             print "Summary: Avg pulls=", T.mean(), time.time()-start_time
             break
