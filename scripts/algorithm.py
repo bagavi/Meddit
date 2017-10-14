@@ -63,8 +63,8 @@ def Meddit(arg_tuple):
 
     # Bookkeeping variables
     start_time = time.time()
-    summary    = np.zeros(n*10)
-
+    summary    = np.zeros(n)
+    summary_ind= 0
     if exp_index==0:
         print "Calculating full summary for exp 0"
         full_summary = []
@@ -85,12 +85,11 @@ def Meddit(arg_tuple):
             if T[arm] >= n:
                 arms_finished_pulling += [arm]
                 if ucb[arm] != lcb[arm]:
-#                    print exp_index, "Pull like crazy", arm
                     estimate[arm] = np.mean(dist_func(data[arm:arm+1],data))
                     T[arm]  += n
                     ucb[arm] = estimate[arm]
                     lcb[arm] = estimate[arm]
-                if ucb[arm] < lcb[np.argsort(lcb)[1]]: #Exit
+                if ucb[arm] < lcb[np.argsort(lcb)[1]]: #Exit condition
                     return None
             else:
                 arms_to_pull += [arm]
@@ -123,20 +122,17 @@ def Meddit(arg_tuple):
     
     print "running experiment ", exp_index, "with sigma", sigma
     #Step 2: Iterate
-    for ind in range(n*10):
-        
-        #Storing the whole experiment for the first experiment
-        if exp_index==0:
-            order = estimate.argsort()
-            full_summary += [ [order, estimate, lcb, ucb, T] ]
-            left_over_array += [np.where(lcb < np.min(ucb))]
-        
-        
+    for ind in range(n*10):   
         #Choose the arms
         arms_to_pull = choose_arm()
         
         #Stop if we have found the best arm
         if arms_to_pull == None:
+            #Collecting final stats
+            summary[summary_ind] = estimate.argmin()
+            summary_ind += 1
+            full_summary += [ [estimate] ]
+            left_over_array += [np.where(lcb < np.min(ucb))]
             logging.info("Done. Best arm = "+str(np.argmin(lcb)))
             print "Summary: Avg pulls=", T.mean(), time.time()-start_time
             break
@@ -145,7 +141,14 @@ def Meddit(arg_tuple):
         pull_arm(arms_to_pull)
 
         #Stats
-        summary[ind] = estimate.argmin()
+        if ind%50 == 0:
+            summary[summary_ind] = estimate.argmin()
+            summary_ind += 1
+            #Storing the whole experiment for the first experiment
+            if exp_index==0:
+                full_summary += [ [estimate] ]
+                left_over_array += [np.where(lcb < np.min(ucb))]
+
         if T.mean() > old_tmean:
             old_tmean = T.mean() + 10
             thrown_away = (100.0*np.where(lcb > np.min(ucb))[0].shape[0])/n
@@ -160,7 +163,7 @@ def Meddit(arg_tuple):
             
     filename = '../experiments/'+dataset_name+'/meddit/'+str(exp_index)+'.pkl'
     with open(filename,'wb') as f:
-        pickle.dump([summary, T.mean()] ,f)
+        pickle.dump([summary[:summary_ind+1], T.mean()] ,f)
 
 
 ap = argparse.ArgumentParser(description="Reproduce the experiments in the manuscript")
