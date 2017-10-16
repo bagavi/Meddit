@@ -1,9 +1,9 @@
 # Med-dit
 
-This is a codebash to reproduce all the figures and numbers of the paper titled - "Medoids in Almost-Linear time via
+This is a codebase to reproduce all the figures and numbers of the paper titled - "Medoids in Almost-Linear time via
 multi-arm bandits".
 
- 1) All the figures can be viewed and generated via ipython notebooks in 'figures' folder
+ 1) All the figures can be viewed and generated via ipython notebooks in 'figure' folder
  2) The above figures are generated from experiments - stored in 'experiments' folder
  3) The stored experiments can be re-generated using the following four lines of code
 

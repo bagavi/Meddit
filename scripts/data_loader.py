@@ -41,16 +41,6 @@ def load_mnist():
     data  = np.vstack([ mnist.train.images[np.where(mnist.train.labels==0)], mnist.test.images[np.where(mnist.test.labels==0)]])
     return data
 
-def load_birch1():
-    #Returns birch1 in non-sparse format
-    data = np.loadtxt('/data/medoid_bandit/E18_Mice/trimed_datasets/birch1/birch1.txt')
-    return data
-
-def load_birch2():
-    #Returns birch2 in non-sparse format
-    data = np.loadtxt('/data/medoid_bandit/E18_Mice/trimed_datasets/birch2/birch2.txt')
-    return data
-
 def load_europe():
     #Returns europe in non-sparse format
     data = np.loadtxt('/data/medoid_bandit/E18_Mice/trimed_datasets/europe/europediff.txt')
@@ -60,12 +50,6 @@ def load_Gnutella_6k():
     filepath = '/data/medoid_bandit/E18_Mice/trimed_datasets/gnutella/dist_matrix_Gnutella_6k'
     with open(filepath,'rb') as f:
         data=pickle.load(f)
-    return data
-
-def load_Gnutella_2k_connected():
-    filepath='/data/medoid_bandit/E18_Mice/trimed_datasets/gnutella/dist_matrix_Gnutella_2k_connected'
-    with open(filepath,'rb') as f:
-        data = pickle.load(f)
     return data
 
 def load_Gnutella_6k_undirected():
