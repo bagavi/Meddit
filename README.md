@@ -1,6 +1,5 @@
 # Med-dit :
-## Finds the medoid of n points in O(nlog n) steps 
-##(naive approach takes O(n^2) steps).
+## Finds the medoid of n points in O(nlog n) steps (naive approach takes O(n^2) steps).
 
 This is a codebase to reproduce all the figures and numbers of the paper titled - "Medoids in Almost-Linear time via
 multi-arm bandits".
