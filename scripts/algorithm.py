@@ -76,26 +76,22 @@ def Meddit(arg_tuple):
         Returns None at stopping time
     """
     def choose_arm():
-        low_lcb_arms = np.argsort(lcb)[:num_arms]
-        arms_to_pull = []
-        arms_finished_pulling = []
+        low_lcb_arms = np.argpartition(lcb,num_arms)[:num_arms]
         
-        #Removing arms which have been pulled n times
-        for arm in low_lcb_arms:
-            if T[arm] >= n:
-                arms_finished_pulling += [arm]
-                if ucb[arm] != lcb[arm]:
-                    estimate[arm] = np.mean(dist_func(data[arm:arm+1],data))
-                    T[arm]  += n
-                    ucb[arm] = estimate[arm]
-                    lcb[arm] = estimate[arm]
-                if ucb[arm] < lcb[np.argsort(lcb)[1]]: #Exit condition
-                    return None
-            else:
-                arms_to_pull += [arm]
-
-        if len(arms_to_pull) == 0:
+        #Arms which are pulled >= ntimes and ucb!=lcb
+        arms_pulled_morethan_n = low_lcb_arms[ np.where( (T[low_lcb_arms]>=n) & (ucb[low_lcb_arms] != lcb[low_lcb_arms]) ) ]
+        
+        if arms_pulled_morethan_n.shape[0]>0:
+            # Compute the distance of these arms accurately
+            estimate[arms_pulled_morethan_n] = np.mean(dist_func(data[arms_pulled_morethan_n], data), axis=1 )
+            T[arms_pulled_morethan_n]  += n
+            ucb[arms_pulled_morethan_n] = estimate[arms_pulled_morethan_n]
+            lcb[arms_pulled_morethan_n] = estimate[arms_pulled_morethan_n]
+        
+        if ucb.min() <  lcb[np.argpartition(lcb,1)[1]]: #Exit condition
             return None
+
+        arms_to_pull          = low_lcb_arms[ np.where(T[low_lcb_arms]<n) ]
         return arms_to_pull
 
 
@@ -132,8 +128,9 @@ def Meddit(arg_tuple):
             summary[summary_ind] = estimate.argmin()
             summary_ind += 1
             if exp_index==0:
-                full_summary += [ [estimate] ]
-                left_over_array += [np.where(lcb < np.min(ucb))]
+                left_over = np.where(lcb <= np.min(ucb))
+                full_summary += [ [ np.random.choice(estimate[left_over], size=250) ] ]
+                left_over_array += [left_over[0].shape[0]]
             logging.info("Done. Best arm = "+str(np.argmin(lcb)))
             print "Summary: Avg pulls=", T.mean(), time.time()-start_time
             break
@@ -141,14 +138,15 @@ def Meddit(arg_tuple):
         #Pull the arms
         pull_arm(arms_to_pull)
 
+        left_over = np.where(lcb <= np.min(ucb))
+        left_over_array += [left_over[0].shape[0]]
         #Stats
         if ind%50 == 0:
             summary[summary_ind] = estimate.argmin()
             summary_ind += 1
             #Storing the whole experiment for the first experiment
             if exp_index==0:
-                full_summary += [ [estimate] ]
-                left_over_array += [np.where(lcb < np.min(ucb))]
+                full_summary += [ [ np.random.choice(estimate[left_over], size=250) ] ]
 
         if T.mean() > old_tmean:
             old_tmean = T.mean() + 10
@@ -187,7 +185,7 @@ if dataset   == 'rnaseq20k':
 elif dataset == 'rnaseq100k':
     data_loader = data_loader.load_rnaseq100k
     dist_func   = helper.l1_dist
-    sigma       = 0.25
+    sigma       = 0.5
 elif dataset == 'netflix20k':
     data_loader = data_loader.load_netflix20k
     dist_func   = helper.cosine_dist
@@ -202,5 +200,8 @@ elif dataset == 'mnist':
                    
 print "Running", num_trials, "experiments on ", num_jobs, "parallel jobs", "on dataset", dataset
 arg_tuple =  itertools.product(range(num_trials), [data_loader], [dataset], [dist_func], [sigma], [verbose] )
-pool      = mp.Pool(processes=num_jobs)
-pool.map(Meddit, arg_tuple)
+for row in arg_tuple:
+    print row
+    Meddit(row)
+#pool      = mp.Pool(processes=num_jobs)
+#pool.map(Meddit, arg_tuple)
