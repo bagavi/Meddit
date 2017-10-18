@@ -8,8 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-datasets/
-experiments/
+datasets/netflix/
 env/
 build/
 develop-eggs/
